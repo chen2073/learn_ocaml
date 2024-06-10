@@ -56,3 +56,35 @@ let date_fun (d: int) (m: string) : bool =
     | "Jan" | "Mar" | "May" | "Jul" | "Aug" | "Oct" | "Dec" -> 0 < d && d <= 31
     | "Apr" | "Jun" | "Sept" | "Nov" -> 0 < d && d <= 30
     | _ -> invalid_arg "m"
+
+(* ex: fib *)
+let rec fib_aux nth n_target n_minus_one n_minus_two = 
+  if nth = n_target then n_minus_one + n_minus_two else fib_aux (nth+1) n_target (n_minus_one + n_minus_two) n_minus_one
+
+let fib n = 
+  match n with
+    | 1 | 2 -> 1
+    | _ -> fib_aux 3 n 1 1
+
+(* ex: fib fast *)
+
+(* ex: poly types *)
+let f x = if x then x else x
+let g x y = if y then x else x
+let h x y z = if x then y else z
+let i x y z = if x then y else y
+
+(* ex: divide *)
+let divide (numerator: float) (denominator: float) : float = numerator /. denominator
+
+(* ex: associativity *)
+let add x y = x + y
+(* 
+  add 5 1 -> int
+  add 5 -> fun
+  (add 5) 1 -> int
+  add (5 1) -> error
+*)
+
+(* ex: average *)
+let ( +/. ) x y = (x +. y) /. 2.
