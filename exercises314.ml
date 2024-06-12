@@ -81,4 +81,25 @@ let rec from i j l = if i > j then l else from i (j - 1) (j :: l)
 (** [i -- j] is the list containing the integers from [i] to [j], inclusive. *)
 let ( -- ) i j = from i j []
 
-let long_list = 0 -- 1_000_000
+(* let long_list = 0 -- 1_000_000 *)
+
+
+(* Exercise: unimodal *)
+type enumDir = Inc | Dec
+let is_unimodal (ls: int list): bool = 
+  let rec helper (ls: int list) (direction: enumDir) (prev: int): bool = 
+    match (ls, direction) with 
+    | ([], _) -> true
+    | (head::rest, Inc) when prev <= head -> helper rest direction head
+    | (head::rest, Inc) when prev > head -> helper rest Dec head
+    | (head::rest, Dec) when prev >= head -> helper rest direction head
+    | _ -> false in
+  helper ls Inc min_int 
+
+(* Exercise: powerset *)
+let powerset ls = 
+  let rec helper ls builder result = 
+    match ls with 
+    | [] -> result @ [builder]
+    | head :: rest -> helper rest (builder @ [head]) (result @ [builder]) in 
+  helper ls [] []
