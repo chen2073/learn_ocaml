@@ -137,8 +137,7 @@ let rec safe_tl (ls: 'a list): 'a list option =
 let max_hp (ls: strcutPokemon list): strcutPokemon option = 
   let rec helper (ls: strcutPokemon list) (max_hp_pokimon: strcutPokemon option) = 
     match ls, max_hp_pokimon with 
-    | [], None -> None
-    | [], Some pokimon -> Some pokimon
+    | [], option_pokimon -> option_pokimon
     | head :: rest, None -> helper rest (Some head)
     | head :: rest, Some pokimon when pokimon.hp < head.hp -> helper rest (Some head)
     | _ :: rest, some_pokimon -> helper rest some_pokimon in 
@@ -146,3 +145,94 @@ let max_hp (ls: strcutPokemon list): strcutPokemon option =
 
 (* Exercise: date before *)
 type date = int * int * int
+let is_before (first_date: date) (second_date: date): bool = 
+  match first_date, second_date with 
+  | (first_year, first_month, first_day), (second_year, second_month, second_day) -> 
+    first_year < second_year && first_month < second_month && first_day < second_day
+
+(* Exercise: earliest date *)
+let earliest (date_ls: date list): date option = 
+  let rec helper (date_ls: date list) (result: date option): date option = 
+    match date_ls, result with 
+    | [], option_date -> option_date
+    | head :: rest, None -> helper rest (Some head)
+    | head :: rest, Some date when is_before head date -> helper rest (Some head)
+    | _ :: rest, _ -> helper rest result in
+  helper date_ls None
+
+(* Exercise: assoc list *)
+let insert k v lst = (k, v) :: lst
+
+let rec lookup k = function
+| [] -> None
+| (k', v) :: t -> if k = k' then Some v else lookup k t
+
+let assoc_ls = insert 1 "one" [] |> insert 2 "two" |> insert 3 "three"
+
+(* Exercise: cards *)
+type enumSuit = Club | Diamond | Heart | Spade
+type enumRank = Number of int | Jack | Queen | King | Ace
+type structCard = {suit: enumSuit; rank: enumRank}
+let cards = [{suit = Club; rank=Ace};{suit = Heart; rank=Queen};{suit = Diamond; rank=Number 2};{suit = Spade; rank=Number 7}]
+
+(* Exercise: matching *)
+let ls1 = [None; Some 1]
+let ls2 = [None, None, None]
+let ls3 = [None, None]
+let ls4 = [None, None]
+let ls5 = []
+
+(* Exercise: quadrant *)
+type quad = I | II | III | IV
+type sign = Neg | Zero | Pos
+
+let sign (x:int) : sign = if x = 0 then Zero else if x > 0 then Pos else Neg
+
+let quadrant (x, y: int*int): quad option = 
+  match sign x, sign y with
+    | Pos, Pos -> Some I
+    | Neg, Pos -> Some II
+    | Neg, Neg -> Some III
+    | Pos, Neg -> Some IV
+    | _ -> None
+
+let quadrant_when (x, y: int*int): quad option =
+  match x, y with
+    | (x, y) when x > 0 && y > 0 -> Some I
+    | (x, y) when x < 0 && y > 0 -> Some II
+    | (x, y) when x < 0 && y < 0 -> Some III
+    | (x, y) when x > 0 && y < 0 -> Some IV
+    | _ -> None
+
+(* Exercise: depth *)
+type 'a tree = None | TreeNode of 'a * 'a tree * 'a tree
+let rec depth (t: 'a tree): int = 
+  match t with 
+  | None -> 0
+  | TreeNode (_, left, right) -> 1 + max (depth left) (depth right)
+
+let tree1 = TreeNode(10, TreeNode(5, None, None), TreeNode(4, None, TreeNode(9, None, TreeNode(2, None, None))))
+
+(* Exercise: shape *)
+let rec same_shape (t1: 'a tree) (t2: 'a tree): bool = 
+  match t1, t2 with
+  | None, None -> true
+  | TreeNode(v1, left1, right1), TreeNode(v2, left2, right2) -> (same_shape left1 left2) && (same_shape right1 right2)
+  | _ -> false
+
+let tree2 = TreeNode(8, TreeNode(9, None, None), TreeNode(3, None, TreeNode(2, None, TreeNode(1, None, None))))
+let tree3 = TreeNode(8, TreeNode(9, None, None), TreeNode(3, None, TreeNode(2, None, None)))
+
+(* Exercise: list max exn *)
+let list_max (ls: int list): int = 
+  let rec helper (ls: int list) (result: int option): int = 
+    match ls, result with 
+    | [], None -> failwith "list_max"
+    | [], Some max_value -> max_value
+    | head :: rest, None -> helper rest (Some head)
+    | head :: rest, Some value -> helper rest (Some (if head > value then head else value)) in 
+  helper ls None
+
+(* Exercise: list max exn string *)
+let list_max_string (ls: int list): string = 
+  
