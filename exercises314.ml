@@ -235,4 +235,35 @@ let list_max (ls: int list): int =
 
 (* Exercise: list max exn string *)
 let list_max_string (ls: int list): string = 
-  
+  match ls with 
+  | [] -> "empty"
+  | _ -> list_max ls |> string_of_int
+
+(* Exercise: list max exn ounit *)
+
+(* Exercise: is_bst *)
+let is_bst (tree: int tree): bool = 
+  let rec helper (root: int tree) (lower_bound: int) (upper_bound: int): bool = 
+    match root with 
+    | None -> true
+    | TreeNode(root_val, _, _) when not (lower_bound < root_val && root_val < upper_bound) -> false
+    | TreeNode(root_val, left_node, right_node) -> helper left_node lower_bound root_val && helper right_node root_val upper_bound in
+  helper tree min_int max_int
+
+let binary_tree = TreeNode(5, TreeNode(1, None, None), TreeNode(4, TreeNode(3, None, None), TreeNode(6, None, None)))
+let binary_tree2 = TreeNode(5, TreeNode(1, None, None), TreeNode(7, TreeNode(6, None, None), TreeNode(10, None, None)))
+
+(* inorder travserse validate *)
+let is_bst2 tree = 
+  let rec inorder root prev = 
+    match root, prev with 
+    |
+
+(* Exercise: quadrant poly *)
+let quadrant_poly (x, y: int*int) = 
+  match x, y with
+  | (x, y) when x > 0 && y > 0 -> Some `QuadI
+  | (x, y) when x < 0 && y > 0 -> Some `QuadII
+  | (x, y) when x < 0 && y < 0 -> Some `QuadIII
+  | (x, y) when x > 0 && y < 0 -> Some `QuadIV
+  | _ -> None
