@@ -103,3 +103,46 @@ let powerset ls =
     | [] -> result @ [builder]
     | head :: rest -> helper rest (builder @ [head]) (result @ [builder]) in 
   helper ls [] []
+
+let rec print_int_list = function
+  | [] -> ()
+  | h :: t -> Printf.printf "%d\n" h; print_int_list t
+
+(* Exercise: student *)
+type struct_student = {first_name : string; last_name : string; gpa : float}
+let student (student: struct_student): struct_student = student
+let get_student_name (student: struct_student): string * string = (student.first_name, student.last_name)
+let create_student first_name last_name gpa = {first_name = first_name; last_name = last_name; gpa = gpa}
+
+(* Exercise: pokerecord *)
+type enumPoketype = Normal | Fire | Water
+type strcutPokemon = {name: string; hp: int; ptype: enumPoketype}
+let charizard = {name = "charizard"; hp = 78; ptype = Fire}
+let squirtle = {name = "charizard"; hp = 44; ptype = Water}
+let meowth = {name = "meowth"; hp = 40; ptype = Normal}
+
+
+(* Exercise: safe hd and tl *)
+let safe_hd (ls: 'a list ): 'a option = 
+  match ls with 
+  | [] -> None
+  | head :: _ -> Some head
+
+let rec safe_tl (ls: 'a list): 'a list option = 
+  match ls with
+  | [] -> None
+  | _ :: rest -> safe_tl rest
+
+(* Exercise: pokefun *)
+let max_hp (ls: strcutPokemon list): strcutPokemon option = 
+  let rec helper (ls: strcutPokemon list) (max_hp_pokimon: strcutPokemon option) = 
+    match ls, max_hp_pokimon with 
+    | [], None -> None
+    | [], Some pokimon -> Some pokimon
+    | head :: rest, None -> helper rest (Some head)
+    | head :: rest, Some pokimon when pokimon.hp < head.hp -> helper rest (Some head)
+    | _ :: rest, some_pokimon -> helper rest some_pokimon in 
+  helper ls None
+
+(* Exercise: date before *)
+type date = int * int * int
