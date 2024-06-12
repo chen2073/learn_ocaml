@@ -69,9 +69,16 @@ let take n ls =
     else take_aux n (List.tl ls) (i+1) (acc @ [List.hd ls]) in 
     take_aux n ls 0 []
 
-let drop n ls = 
-  let rec helper n ls i = 
-    match ls with
-    | [] -> ls
-    | _ :: rest -> if i >= n then rest else helper n rest (i+1) in 
-  helper n ls 0
+let rec drop n ls = 
+  match n with
+  | 0 -> ls
+  | _ when List.is_empty ls -> ls
+  | _ -> drop (n-1) (List.tl ls)
+
+(* Exercise: take drop tail *)
+let rec from i j l = if i > j then l else from i (j - 1) (j :: l)
+
+(** [i -- j] is the list containing the integers from [i] to [j], inclusive. *)
+let ( -- ) i j = from i j []
+
+let long_list = 0 -- 1_000_000
