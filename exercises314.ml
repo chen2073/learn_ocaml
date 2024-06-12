@@ -45,7 +45,6 @@ let get_5th (ls: int list): int =
   | length when length < 5 -> 0
   | _ -> List.nth ls 4
 
-
 let get_5th_v2 ls = 
   let rec helper ls i =
     match ls with
@@ -53,3 +52,26 @@ let get_5th_v2 ls =
     | head :: _ when i = 4 -> head
     | _ :: rest -> helper rest (i + 1) [@@ocaml.warning "-8"] in 
   helper ls 0
+
+let sort_ls ls = List.sort Stdlib.compare ls
+
+(* Exercise: library test *)
+
+(* Exercise: library puzzle *)
+let get_last ls = List.rev ls |> fun ls -> List.nth ls 0
+
+let any_zeros (ls: int list): bool = List.exists (fun elem -> elem = 0) ls
+
+(* Exercise: take drop *)
+let take n ls = 
+  let rec take_aux n ls i acc = 
+    if List.is_empty ls || i == n then acc
+    else take_aux n (List.tl ls) (i+1) (acc @ [List.hd ls]) in 
+    take_aux n ls 0 []
+
+let drop n ls = 
+  let rec helper n ls i = 
+    match ls with
+    | [] -> ls
+    | _ :: rest -> if i >= n then rest else helper n rest (i+1) in 
+  helper n ls 0
