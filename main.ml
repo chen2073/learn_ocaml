@@ -15,3 +15,9 @@ let decide x y = if x + y > 10 then true else false
 
 (* polymorphic function *)
 let add (x : float) (y : float) = x +. y
+
+let rec reduce f acc = function
+  | [] -> acc
+  | head :: rest -> reduce f (f head acc) rest
+
+let result = reduce (+) 0 [1;2;3;4;5;6];;

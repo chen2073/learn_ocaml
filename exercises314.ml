@@ -254,10 +254,10 @@ let binary_tree = TreeNode(5, TreeNode(1, None, None), TreeNode(4, TreeNode(3, N
 let binary_tree2 = TreeNode(5, TreeNode(1, None, None), TreeNode(7, TreeNode(6, None, None), TreeNode(10, None, None)))
 
 (* inorder travserse validate *)
-let is_bst2 tree = 
+(* let is_bst2 tree = 
   let rec inorder root prev = 
     match root, prev with 
-    |
+    | *)
 
 (* Exercise: quadrant poly *)
 let quadrant_poly (x, y: int*int) = 
