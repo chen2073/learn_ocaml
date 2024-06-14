@@ -129,6 +129,28 @@ let m3 = [[1; 2]; [3]]
 (* Exercise: row vector add *)
 let add_row_vectors (ls1: int list) (ls2:int list): int list = List.map2 (fun x y -> x + y) ls1 ls2
 
+(* Exercise: matrix add *)
 let add_matrices (m1: int list list) (m2: int list list): int list list = List.map2 add_row_vectors m1 m2
 
+(* Exercise: matrix multiply *)
+let rec get_column (nth: int) (m1: int list list): int list = 
+  match m1 with
+  | [] -> []
+  | row::rows -> (List.nth row nth) :: get_column nth rows
+
+let m4 = [[1;2;3]; [4;5;6]; [7;8;9]]
+
+let mul_row_vectors (ls1: int list) (ls2:int list): int list = List.map2 (fun x y -> x * y) ls1 ls2
+let sum_vectors (ls: int list): int = fold_left (+) 0 ls
+let compute_entry ls1 ls2 = mul_row_vectors ls1 ls2 |> sum_vectors
+
+let transpose matrix = 
+
+
 let multiply_matrices (m1: int list list) (m2: int list list): int list list = 
+  let m = List.length m1 in 
+  let n = match m2 with
+          | [] -> 0
+          | row::_ -> List.length row in 
+  let rec helper i j = 
+    if m <> 0 then  
