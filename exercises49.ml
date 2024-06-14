@@ -144,13 +144,22 @@ let mul_row_vectors (ls1: int list) (ls2:int list): int list = List.map2 (fun x 
 let sum_vectors (ls: int list): int = fold_left (+) 0 ls
 let compute_entry ls1 ls2 = mul_row_vectors ls1 ls2 |> sum_vectors
 
-let transpose matrix = 
+let transpose m =
+  match m with
+  | [] -> []
+  | row :: rows -> let row_length = List.length row in 
+    let rec helper i = if i >= row_length then [] else get_column i m :: helper (i+1) in 
+    helper 0
 
+let rec multiply_matrices (m1: int list list) (m2: int list list): int list list = 
+  let rec helper (row1: int list) (m2: int list list): int list = 
+    match m2 with 
+    | [] -> []
+    | row2 :: rows2 -> compute_entry row1 row2 :: helper row1 rows2 in
+  match m1 with 
+  | [] -> []
+  | row1 :: rows1 -> helper row1 m2 :: multiply_matrices rows1 m2
 
-let multiply_matrices (m1: int list list) (m2: int list list): int list list = 
-  let m = List.length m1 in 
-  let n = match m2 with
-          | [] -> 0
-          | row::_ -> List.length row in 
-  let rec helper i j = 
-    if m <> 0 then  
+let matrix1 = [[1;2;3];[4;5;6]]
+let matrix2 = [[10;11];[20;21];[30;31]]
+let transposed_matrix = [[10;20;30];[11;21;31]]
