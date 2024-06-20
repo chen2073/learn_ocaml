@@ -1,6 +1,6 @@
 (* Exercise: complex synonym *)
 module type ComplexSig = sig
-  type t = float * float
+  type t
   val zero : t
   val add : t -> t -> t
 end
@@ -63,3 +63,32 @@ let fill_batchedqueue n =
 (* each enqueue operation is O(1), and there are n enqueue operations, so n * O(1) = O(n) *)
 
 (* Exercise: binary search tree map *)
+module type Map = sig
+  type ('k, 'v) t
+  val empty: ('k, 'v) t
+  val insert: 'k -> 'v -> ('k, 'v) t -> ('k, 'v) t
+  val lookup: 'k -> ('k, 'v) t -> 'v
+end
+
+module BstMap: Map = struct
+  type 'a bst = None | Node of 'a bst * 'a bst * 'a
+
+  type ('k, 'v) t = ('k, 'v) bst
+  
+  let empty = None
+
+  let rec insert new_k new_v bst = 
+    match bst with 
+    | None -> Node (None, None, (k, v))
+    | (left, right, (k, v)) -> 
+      if new_k > k then insert new_k new_v right
+      else insert new_k new_v left
+
+  let rec lookup targetKey bst = 
+    match bst with
+    | None -> failwith "not found"
+    | (_, _, (k, v)) when key = targetKey -> v
+    | (left, _, (k, v)) when targetKey < k -> lookup targetKey left
+    | (_, right, (k, v)) when targetKey > k -> lookup targetKey left
+
+end
