@@ -98,5 +98,64 @@ module BstMap: Map = struct
       | _ when k < k' -> lookup k l
       | _ when k > k' -> lookup k r
       [@@ocaml.warning "-8"]
+end
 
+(* Exercise: fraction *)
+module type Fraction = sig
+  (* A fraction is a rational number p/q, where q != 0. *)
+  type t
+
+  (** [make n d] is n/d. Requires d != 0. *)
+  val make : int -> int -> t
+
+  val numerator : t -> int
+  val denominator : t -> int
+  val to_string : t -> string
+  val to_float : t -> float
+
+  val add : t -> t -> t
+  val mul : t -> t -> t
+end
+
+module TupleFraction: Fraction = struct
+  type t = (int * int)
+
+  let make n d = (n, d)
+
+  let numerator (n, d) = n
+
+  let denominator (n, d) = d
+
+  let to_string (n ,d) = Printf.sprintf "%d / %d\n" n d
+
+  let to_float (n, d) = (float_of_int n) /. (float_of_int d)
+
+  let add (n, d) (n', d') = 
+    match d = d' with 
+    | true -> (n+n', d)
+    | false -> (n * d' + n' * d, d * d')
+
+  let mul (n, d) (n', d') = (n * n', d * d')
+end
+
+(* Exercise: fraction reduced *)
+(** [gcd x y] is the greatest common divisor of [x] and [y].
+    Requires: [x] and [y] are positive. *)
+let rec gcf x y =
+  if x = 0 then y
+  else if (x < y) then gcf (y - x) x
+  else gcf y (x - y)
+
+module TupleFractionSimplified = struct
+  include TupleFraction
+  let make n d = 
+    let greatest_common_factor = gcf n d in
+      (n / greatest_common_factor, d / greatest_common_factor)
+
+  let add (n, d) (n', d') = 
+    match d = d' with 
+    | true -> make (n+n') d
+    | false -> make ( n * d' + n' * d ) ( d * d')
+
+  let mul (n, d) (n', d') =  make (n * n') (d * d')
 end
