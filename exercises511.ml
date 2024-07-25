@@ -159,3 +159,135 @@ module TupleFractionSimplified = struct
 
   let mul (n, d) (n', d') =  make (n * n') (d * d')
 end
+
+(* Exercise: make char map *)
+module CharMap = Map.Make(Char)
+(* module CharMap :
+  sig
+    type key = char
+    type 'a t = 'a Map.Make(Char).t
+    val empty : 'a t
+    val add : key -> 'a -> 'a t -> 'a t
+    val add_to_list : key -> 'a -> 'a list t -> 'a list t
+    val update : key -> ('a option -> 'a option) -> 'a t -> 'a t
+    val singleton : key -> 'a -> 'a t
+    val remove : key -> 'a t -> 'a t
+    val merge :
+      (key -> 'a option -> 'b option -> 'c option) -> 'a t -> 'b t -> 'c t
+    val union : (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+    val cardinal : 'a t -> int
+    val bindings : 'a t -> (key * 'a) list
+    val min_binding : 'a t -> key * 'a
+    val min_binding_opt : 'a t -> (key * 'a) option
+    val max_binding : 'a t -> key * 'a
+    val max_binding_opt : 'a t -> (key * 'a) option
+    val choose : 'a t -> key * 'a
+    val choose_opt : 'a t -> (key * 'a) option
+    val find : key -> 'a t -> 'a
+    val find_opt : key -> 'a t -> 'a option
+    val find_first : (key -> bool) -> 'a t -> key * 'a
+    val find_first_opt : (key -> bool) -> 'a t -> (key * 'a) option
+    val find_last : (key -> bool) -> 'a t -> key * 'a
+    val find_last_opt : (key -> bool) -> 'a t -> (key * 'a) option
+    val iter : (key -> 'a -> unit) -> 'a t -> unit
+    val fold : (key -> 'a -> 'acc -> 'acc) -> 'a t -> 'acc -> 'acc
+    val map : ('a -> 'b) -> 'a t -> 'b t
+    val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
+    val filter : (key -> 'a -> bool) -> 'a t -> 'a t
+    val filter_map : (key -> 'a -> 'b option) -> 'a t -> 'b t
+    val partition : (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
+    val split : key -> 'a t -> 'a t * 'a option * 'a t
+    val is_empty : 'a t -> bool
+    val mem : key -> 'a t -> bool
+    val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+    val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+    val for_all : (key -> 'a -> bool) -> 'a t -> bool
+    val exists : (key -> 'a -> bool) -> 'a t -> bool
+    val to_list : 'a t -> (key * 'a) list
+    val of_list : (key * 'a) list -> 'a t
+    val to_seq : 'a t -> (key * 'a) Seq.t
+    val to_rev_seq : 'a t -> (key * 'a) Seq.t
+    val to_seq_from : key -> 'a t -> (key * 'a) Seq.t
+    val add_seq : (key * 'a) Seq.t -> 'a t -> 'a t
+    val of_seq : (key * 'a) Seq.t -> 'a t
+  end *)
+
+  (* empty: empty map with char type as key *)
+  (* add: add key value to the map with key type Map.Make(Char).t and value type 'a *)
+  (* remove: remove map's key value by key *)
+
+(* Exercise: char ordered *)
+(* char module implments the compare function of two chars *)
+
+(* Exercise: use char map *)
+let m = CharMap.empty 
+  |> CharMap.add 'A' "Alpha"
+  |> CharMap.add 'E' "Echo"
+  |> CharMap.add 'S' "Sierra"
+  |> CharMap.add 'V' "Victor"
+
+let e_value = CharMap.find 'E' m
+
+let a_is_bound = m |> CharMap.remove 'A' |> CharMap.mem 'A'
+
+let assoc_ls = CharMap.bindings m
+
+(* Exercise: bindings *)
+(* all the same *)
+
+(* Exercise: date order *)
+type date = {month : int; day : int}
+
+module Date = struct
+  type t = date
+  let compare {month = month1; day = day1} {month = month2; day = day2} = 
+    match month1 - month2 with
+    | 0 -> day1 - day2
+    | c -> c
+end
+
+(* Exercise: calendar *)
+module DateMap = Map.Make(Date)
+
+type calendar = string DateMap.t
+
+let c: calendar = DateMap.empty 
+  |> DateMap.add {month=3; day=12} "Amy's birthday"
+  |> DateMap.add {month=2; day=18} "Chinese new year"
+
+let print_calendar c = 
+  let month_int_to_string month = 
+    match month with
+    | 1 -> "Jan"
+    | 2 -> "Feb"
+    | 3 -> "Mar"
+    | 4 -> "Apr" 
+    | 5 -> "May" 
+    | 6 -> "Jun" 
+    | 7 -> "Jul" 
+    | 8 -> "Aug"
+    | 9 -> "Sep"
+    | 10 -> "Oct"
+    | 11 -> "Nov" 
+    | 12 -> "Dec" 
+    | _ -> failwith "invalid month" in
+  let print_entry {month=month; day=day} event = 
+    Printf.printf "Month: %s, day: %d, event: %s\n" (month_int_to_string month) day event in 
+DateMap.iter print_entry c 
+
+(* Exercise: is for *)
+let is_for (char_map: string CharMap.t): string CharMap.t = 
+  let rephrase key value = Printf.sprintf "%c is for %s" key value in
+  CharMap.mapi rephrase char_map
+
+let is_for_test = 
+  CharMap.empty 
+  |> CharMap.add 'a' "apple"
+  |> CharMap.add 'b' "bitch"
+
+(* Exercise: first after *)
+let first_after (c: calendar) (d: Date.t): string = 
+  let (first_after_key, _) = DateMap.find_first (fun k -> Date.compare k d > 0) c in 
+  DateMap.find first_after_key c
+
+(* Exercise: sets *)
