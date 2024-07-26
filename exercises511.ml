@@ -291,3 +291,30 @@ let first_after (c: calendar) (d: Date.t): string =
   DateMap.find first_after_key c
 
 (* Exercise: sets *)
+module CaseInsesitiveSet = Set.Make(struct
+  type t = string
+  let compare s1 s2 = 
+    String.compare (String.lowercase_ascii s1) (String.lowercase_ascii s2)
+end)
+
+let case_ignore_equal = CaseInsesitiveSet.equal (CaseInsesitiveSet.of_list ["grr"; "argh"]) (CaseInsesitiveSet.of_list ["aRgh"; "GRR"])
+
+(* Exercise: ToString *)
+module type ToString = sig
+  type t
+  val to_string: t -> string
+end
+
+(* Exercise: Print *)
+module Print (M: ToString) = struct
+  let print v = Printf.printf "%s\n" (M.to_string v)
+end
+
+(* Exercise: Print Int *)
+module MyInt: ToString = struct
+  type t = int
+  let to_string v = string_of_int v
+end
+
+module PrintInt = Print(MyInt)
+let _ = PrintInt.print 5
