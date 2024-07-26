@@ -311,10 +311,33 @@ module Print (M: ToString) = struct
 end
 
 (* Exercise: Print Int *)
-module MyInt: ToString = struct
+module MyInt = struct
   type t = int
-  let to_string v = string_of_int v
+  let to_string = string_of_int
 end
 
 module PrintInt = Print(MyInt)
+
 let _ = PrintInt.print 5
+
+module MyString = struct
+  type t = string
+  let to_string s = s
+end
+
+module PrintString = Print(MyString)
+
+let _ = PrintString.print "abcd"
+
+(* Exercise: Print Reuse *)
+(* functor is acting as interface to implment different behaviour based on the types *)
+
+(* Exercise: Print String reuse revisited *)
+module StringWithPrint = struct
+  include String
+  include PrintString
+end
+
+(* Exercise: implementation without interface *)
+
+(* Exercise: refactor arith *)
