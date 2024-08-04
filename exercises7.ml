@@ -15,9 +15,12 @@ let c = [ref 1; ref 2; ref 3]
 (* Exercise: inc fun *)
 let inc = ref (fun x -> x + 1)
 
-(* let inc_rec accumulator = if accumulator = 3110 then accumulator else !inc (accumulator+1)
-
-inc := inc_rec *)
+let answer = 
+  let acc = ref 0 in
+  for i = 1 to 3110 do
+    acc := !inc !acc
+  done;
+  !acc;;
 
 (* Exercise: addition assignment *)
 let ( +:= ) x y = x := !x + y
@@ -67,4 +70,5 @@ arr';;
 
 (* Exercise: init matrix *)
 
-let init_matrix n o f =
+let init_matrix (n: int) (o: int) (f: int -> int -> 'a): 'a array array =
+  Array.init n (fun i -> Array.init o (fun j -> f i j) )
