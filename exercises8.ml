@@ -160,6 +160,7 @@ end) = struct
           | false -> linear_search (index+1) in 
         linear_search hash_index
 
-  let resize hashtable = 
-    let load_factor = float_of_int hashtable.bindings /. float_of_int hashtable.buckets in
+  let get_load_factor hashtable = float_of_int hashtable.bindings /. float_of_int hashtable.buckets
+
+  let resize hashtable = ()
 end
