@@ -108,14 +108,14 @@ module HashTableLinearProbe: (sig
   val resize: ('k, 'v) t -> unit
 end) = struct
 
-  type ('k, 'v) binding = {key: 'k; value: 'v; mutable isDeleted: bool}
+  type ('a, 'b) binding = {key: 'a; value: 'b; mutable isDeleted: bool}
 
   type ('k, 'v) t = {
     hash_function: 'k -> int;
     mutable bindings: int;
-    (* buckets = array length *)
+    (* buckets is array length *)
     mutable buckets: int;
-    mutable array_bindings: ('k,'v) binding option array
+    mutable array_bindings: ('k, 'v) binding option array
   } 
 
   let find hashtable key = 
@@ -131,7 +131,7 @@ end) = struct
           match binding.key = key with
           | true -> Some binding.value
           | false -> linear_search (index+1) in
-        linear_search hash_index
+    linear_search hash_index
 
   let insert hashtable key value = 
     let hash_index = hashtable.hash_function key in
@@ -142,9 +142,9 @@ end) = struct
         match hashtable.array_bindings.(index mod hashtable.buckets) with
         | None -> hashtable.array_bindings.(index mod hashtable.buckets) <- Some {key=key; value=value; isDeleted=false}
         | Some _ -> linear_search (index+1) in 
-        linear_search hash_index;
-        (* impreative increment binding count *)
-        hashtable.bindings <- hashtable.bindings + 1
+    linear_search hash_index;
+    (* impreative increment binding count *)
+    hashtable.bindings <- hashtable.bindings + 1
 
   let remove hashtable key = 
     let hash_index = hashtable.hash_function key in
@@ -158,7 +158,7 @@ end) = struct
           match bindings.key = key with 
           | true -> bindings.isDeleted <- true
           | false -> linear_search (index+1) in 
-        linear_search hash_index
+    linear_search hash_index
 
   let get_load_factor hashtable = float_of_int hashtable.bindings /. float_of_int hashtable.buckets
 
