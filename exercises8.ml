@@ -103,9 +103,9 @@ let _ =
 module HashTableLinearProbe: (sig
   type ('k, 'v) t
   val find: ('k, 'v) t -> 'k -> 'v option
-  (* val insert: ('k, 'v) t -> 'k -> 'v -> unit *)
-  (* val remove: ('k, 'v) t -> 'k -> 'v -> unit *)
-  (* val resize: ('k, 'v) t -> unit *)
+  val insert: ('k, 'v) t -> 'k -> 'v -> unit
+  val remove: ('k, 'v) t -> 'k -> unit
+  val resize: ('k, 'v) t -> unit
 end) = struct
 
   type ('k, 'v) binding = {key: 'k; value: 'v; mutable isDeleted: bool}
@@ -113,17 +113,53 @@ end) = struct
   type ('k, 'v) t = {
     hash_function: 'k -> int;
     mutable bindings: int;
+    (* buckets = array length *)
     mutable buckets: int;
     mutable array_bindings: ('k,'v) binding option array
   } 
 
   let find hashtable key = 
-    let key_index = hashtable.hash_function key in
-    let rec linear_search index = match hashtable.array_bindings.(index) with 
-    | None -> None
-    | Some binding -> 
-      match binding.key = key with
-      | true -> Some binding.value
-      | false -> linear_search (index+1) in
-    linear_search key_index
+    let hash_index = hashtable.hash_function key in
+    let rec linear_search index = 
+      (* defensive guard for preventing dead loop in linear search *)
+      if index > hash_index && index mod hashtable.buckets = index 
+        then failwith "dead loop in linear search for find"
+      else 
+        match hashtable.array_bindings.(index mod hashtable.buckets) with 
+        | None -> None
+        | Some binding -> 
+          match binding.key = key with
+          | true -> Some binding.value
+          | false -> linear_search (index+1) in
+        linear_search hash_index
+
+  let insert hashtable key value = 
+    let hash_index = hashtable.hash_function key in
+    let rec linear_search index = 
+      if index > hash_index && index mod hashtable.buckets = index 
+        then failwith "dead loop in linear search for insert"
+      else
+        match hashtable.array_bindings.(index mod hashtable.buckets) with
+        | None -> hashtable.array_bindings.(index mod hashtable.buckets) <- Some {key=key; value=value; isDeleted=false}
+        | Some _ -> linear_search (index+1) in 
+        linear_search hash_index;
+        (* impreative increment binding count *)
+        hashtable.bindings <- hashtable.bindings + 1
+
+  let remove hashtable key = 
+    let hash_index = hashtable.hash_function key in
+    let rec linear_search index = 
+      if index > hash_index && index mod hashtable.buckets = index 
+        then failwith "dead loop in linear search for remove"
+      else
+        match hashtable.array_bindings.(index mod hashtable.buckets) with
+        | None -> linear_search (index+1)
+        | Some bindings -> 
+          match bindings.key = key with 
+          | true -> bindings.isDeleted <- true
+          | false -> linear_search (index+1) in 
+        linear_search hash_index
+
+  let resize hashtable = 
+    let load_factor = float_of_int hashtable.bindings /. float_of_int hashtable.buckets in
 end
