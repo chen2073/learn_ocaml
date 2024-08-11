@@ -54,3 +54,76 @@ let bindings (hashtable: ('a,'b) Hashtbl.t): ('a * 'b) list =
   Hashtbl.fold (fun key value acc -> (key, value)::acc) hashtable []
 
 let _ = bindings tab;;
+
+(* Exercise: hashtbl load factor *)
+let load_factor hashtable = 
+  let stat = Hashtbl.stats hashtable in 
+  float_of_int stat.num_bindings /. float_of_int stat.num_buckets
+
+let _ = Hashtbl.stats tab
+let _ = Hashtbl.add tab 100 "100"
+let _ = Hashtbl.stats tab
+let _ = Hashtbl.add tab 200 "200"
+let _ = Hashtbl.stats tab
+
+(* Exercise: functorial interface *)
+module StringHashTableKey = struct
+  type t = string
+  let equal str1 str2 = str1 = str2
+  let hash str = String.fold_left (fun acc char -> acc * 10 + Char.code char) 0 str
+end
+
+module StringHashTable = Hashtbl.Make(StringHashTableKey)
+
+let ht = StringHashTable.create 5
+let _ = StringHashTable.add ht "Abc" "abc"
+
+(* Exercise: equals and hash *)
+(* it tell the code how to hash and how to compare keys which are essential operations for hashtable insertion *)
+
+(* Exercise: bad hash *)
+module BadHashTableKey = struct
+  type t = int
+  let equal a b = a = b
+  let hash _ = 3
+end
+
+module BadHashTable = Hashtbl.Make(BadHashTableKey)
+
+let _ = 
+  let ht1 = BadHashTable.create 10 in
+  BadHashTable.stats ht1;
+  BadHashTable.add ht1 1 "1";
+  BadHashTable.stats ht1;
+  BadHashTable.add ht1 2 "2";
+  BadHashTable.stats ht1;
+  BadHashTable.add ht1 3 "3";;
+
+
+module HashTableLinearProbe: (sig
+  type ('k, 'v) t
+  val find: ('k, 'v) t -> 'k -> 'v option
+  (* val insert: ('k, 'v) t -> 'k -> 'v -> unit *)
+  (* val remove: ('k, 'v) t -> 'k -> 'v -> unit *)
+  (* val resize: ('k, 'v) t -> unit *)
+end) = struct
+
+  type ('k, 'v) binding = {key: 'k; value: 'v; mutable isDeleted: bool}
+
+  type ('k, 'v) t = {
+    hash_function: 'k -> int;
+    mutable bindings: int;
+    mutable buckets: int;
+    mutable array_bindings: ('k,'v) binding option array
+  } 
+
+  let find hashtable key = 
+    let key_index = hashtable.hash_function key in
+    let rec linear_search index = match hashtable.array_bindings.(index) with 
+    | None -> None
+    | Some binding -> 
+      match binding.key = key with
+      | true -> Some binding.value
+      | false -> linear_search (index+1) in
+    linear_search key_index
+end
