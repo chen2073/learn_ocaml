@@ -1,0 +1,6 @@
+{
+    "ocaml.sandbox": {
+        "kind": "custom",
+        "template": "/opt/homebrew/bin/opam exec -- $prog $args"
+    }
+}
