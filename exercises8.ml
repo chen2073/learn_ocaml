@@ -102,6 +102,7 @@ let _ =
 
 module HashTableLinearProbe: (sig
   type ('k, 'v) t
+  val create: ('k -> int) -> ('k, 'v) t
   val find: ('k, 'v) t -> 'k -> 'v option
   val insert: ('k, 'v) t -> 'k -> 'v -> unit
   val remove: ('k, 'v) t -> 'k -> unit
@@ -112,55 +113,94 @@ end) = struct
 
   type ('k, 'v) t = {
     hash_function: 'k -> int;
+    (* bindings are active valid count of current bindings *)
     mutable bindings: int;
+    (* deleted are count of virtually deleted bindings *)
+    mutable deleted: int;
     (* buckets is array length *)
     mutable buckets: int;
     mutable array_bindings: ('k, 'v) binding option array
   } 
 
-  let find hashtable key = 
-    let hash_index = hashtable.hash_function key in
+  type resizeOption = ResizeUp | ResizeDown
+
+  let create hash_function = {
+    hash_function = hash_function;
+    bindings = 0;
+    deleted = 0;
+    buckets = 10;
+    array_bindings = Array.make 10 None
+  }
+
+  (* get_hash_index_fit: fit hashed index within bucket size*)
+  let get_hash_index_fit (hashtable: ('k, 'v) t) (hash_index_raw: int): int = hash_index_raw mod hashtable.buckets
+  
+  (* linear_probe_insert: insert key value in hashtable using linear probe (next available bucket) *)
+  let linear_probe_insert (hashtable: ('k, 'v) t) (key: 'k) (value: 'v): unit = 
+    let hash_index_fit = get_hash_index_fit hashtable (hashtable.hash_function key) in
+    let rec linear_search_empty index = 
+      match hashtable.array_bindings.(index) with
+      | Some _ -> linear_search_empty (index + 1)
+      | None -> hashtable.array_bindings.(index) <- Some {key = key; value = value; isDeleted = false} in 
+    linear_search_empty hash_index_fit
+  
+  (* remap: double or half array binding size and remap old array items to new array *)
+  let remap_array_bindings (hashtable: ('k, 'v) t) (resize_option: resizeOption): unit = 
+    let old_array_bindings = hashtable.array_bindings in
+    let new_array_bindings = Array.make (if resize_option = ResizeUp then hashtable.buckets * 2 else hashtable.buckets / 2) None in
+    (* assign double sized array to hashtable and reset binding and deleted count to 0 *)
+    hashtable.array_bindings <- new_array_bindings;
+    hashtable.bindings <- 0;
+    hashtable.deleted <- 0;
+    (* remap old binding to new array and increament binding count *)
+    Array.iter (fun binding -> 
+      match binding with
+      | Some {key; value; isDeleted} when isDeleted = false -> 
+        linear_probe_insert hashtable key value; 
+        hashtable.bindings <- hashtable.bindings + 1
+      | _ -> ()
+      ) old_array_bindings;;
+    
+  let find hashtable target_key = 
+    let hash_index_raw = hashtable.hash_function target_key in
     let rec linear_search index = 
+      let hash_index_fit = get_hash_index_fit hashtable index in
       (* defensive guard for preventing dead loop in linear search *)
-      if index > hash_index && index mod hashtable.buckets = index 
+      if index > hash_index_raw && hash_index_fit = index 
         then failwith "dead loop in linear search for find"
       else 
-        match hashtable.array_bindings.(index mod hashtable.buckets) with 
-        | None -> None
-        | Some binding -> 
-          match binding.key = key with
-          | true -> Some binding.value
-          | false -> linear_search (index+1) in
-    linear_search hash_index
+        match hashtable.array_bindings.(hash_index_fit) with 
+        | Some {key;value;isDeleted} when isDeleted = false -> 
+          if key = target_key then Some value else linear_search (index+1)
+        | _ -> None in
+    linear_search hash_index_raw
 
   let insert hashtable key value = 
-    let hash_index = hashtable.hash_function key in
+    (* determine if resize needed before insert *)
+    if (float_of_int (hashtable.bindings+1) +. float_of_int hashtable.deleted) /. float_of_int hashtable.buckets > 0.5 
+      then remap_array_bindings hashtable ResizeUp;
+    linear_probe_insert hashtable key value;
+    hashtable.bindings <- hashtable.bindings + 1;;
+
+  let remove hashtable target_key = 
+    let hash_index_raw = hashtable.hash_function target_key in
     let rec linear_search index = 
-      if index > hash_index && index mod hashtable.buckets = index 
-        then failwith "dead loop in linear search for insert"
-      else
-        match hashtable.array_bindings.(index mod hashtable.buckets) with
-        | None -> hashtable.array_bindings.(index mod hashtable.buckets) <- Some {key=key; value=value; isDeleted=false}
-        | Some _ -> linear_search (index+1) in 
-    linear_search hash_index;
-    (* impreative increment binding count *)
-    hashtable.bindings <- hashtable.bindings + 1
-
-  let remove hashtable key = 
-    let hash_index = hashtable.hash_function key in
-    let rec linear_search index = 
-      if index > hash_index && index mod hashtable.buckets = index 
-        then failwith "dead loop in linear search for remove"
-      else
-        match hashtable.array_bindings.(index mod hashtable.buckets) with
-        | None -> linear_search (index+1)
-        | Some bindings -> 
-          match bindings.key = key with 
-          | true -> bindings.isDeleted <- true
-          | false -> linear_search (index+1) in 
-    linear_search hash_index
-
-  let get_load_factor hashtable = float_of_int hashtable.bindings /. float_of_int hashtable.buckets
-
-  let resize hashtable = ()
+      let hash_index_fit = get_hash_index_fit hashtable index in
+      if index > hash_index_raw && hash_index_fit = index 
+        then failwith "dead loop in linear search for find"
+      else 
+        match hashtable.array_bindings.(hash_index_fit) with 
+        | Some binding when binding.isDeleted = false -> 
+          binding.isDeleted <- true
+        | _ -> linear_search (index+1) in
+    linear_search hash_index_raw;
+    hashtable.deleted <- hashtable.deleted + 1;
+    if (float_of_int hashtable.bindings -. float_of_int hashtable.deleted) /. float_of_int hashtable.buckets < 0.125
+      then remap_array_bindings hashtable ResizeDown;;
+    
+  let resize hashtable = 
+    if (float_of_int hashtable.bindings +. float_of_int hashtable.deleted) /. float_of_int hashtable.buckets > 0.5 
+      then remap_array_bindings hashtable ResizeUp
+    else if (float_of_int hashtable.bindings -. float_of_int hashtable.deleted) /. float_of_int hashtable.buckets < 0.125
+      then remap_array_bindings hashtable ResizeDown;;
 end
