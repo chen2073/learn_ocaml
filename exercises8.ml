@@ -139,13 +139,12 @@ end) = struct
 
   let inspect_array_bindings hashtable print_key print_value = 
     for i = 0 to Array.length hashtable.array_bindings - 1 do
-      Printf.printf "index: %d\nbinding: %s\n" i 
+      Printf.printf "index: %d; binding: %s\n" i 
       (match hashtable.array_bindings.(i) with
       | None -> "None"
       | Some binding -> Printf.sprintf "(key %d:, value: %s, isDeleted: %s)" (print_key binding.key) (print_value binding.value) (string_of_bool binding.isDeleted)
       )
-    done;
-    Printf.printf "\n";;
+    done;;
 
   (* get_hash_index_fit: fit hashed index within bucket size*)
   let get_hash_index_fit (hashtable: ('k, 'v) t) (hash_index_raw: int): int = hash_index_raw mod hashtable.buckets
@@ -165,6 +164,7 @@ end) = struct
     let new_array_bindings = Array.make (if resize_option = ResizeUp then hashtable.buckets * 2 else hashtable.buckets / 2) None in
     (* assign double sized array to hashtable and reset binding and deleted count to 0 *)
     hashtable.array_bindings <- new_array_bindings;
+    hashtable.buckets <- Array.length new_array_bindings;
     hashtable.bindings <- 0;
     hashtable.deleted <- 0;
     (* remap old binding to new array and increament binding count *)
@@ -183,12 +183,13 @@ end) = struct
       (* defensive guard for preventing dead loop in linear search *)
       if index > hash_index_raw && hash_index_fit = index 
         then failwith "dead loop in linear search for find"
-      else 
+      else
         match hashtable.array_bindings.(hash_index_fit) with 
-        | Some {key;value;isDeleted} when isDeleted = false -> 
-          if key = target_key then Some value else linear_search (index+1)
-        | _ -> None in
-    linear_search hash_index_raw
+        | None -> None
+        | Some binding -> 
+          if binding.key = target_key && not binding.isDeleted then Some binding.value 
+          else linear_search (index+1) in
+    linear_search hash_index_raw;;
 
   let insert hashtable key value = 
     (* determine if resize needed before insert *)
@@ -221,35 +222,35 @@ end) = struct
 end
 
 let () = 
+  let open HashTableLinearProbe in
   let print_key = (fun key -> key) in 
   let hash_key = print_key in 
   let print_value = (fun value -> value) in 
-  let table = HashTableLinearProbe.create hash_key in 
-  (* HashTableLinearProbe.inspect_array_bindings table print_key print_value; *)
+  let table = create hash_key in 
+  Printf.printf "\n\n\n";
   
-  HashTableLinearProbe.insert table 1 "one";
-  HashTableLinearProbe.inspect table;
-  HashTableLinearProbe.inspect_array_bindings table print_key print_value;
-  (* HashTableLinearProbe.insert table 2 "two";
-  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
-  HashTableLinearProbe.insert table 3 "three";
-  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
-  HashTableLinearProbe.insert table 4 "four";
-  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
-  HashTableLinearProbe.insert table 5 "five";
-  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
-  HashTableLinearProbe.insert table 6 "six";
-  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
-  HashTableLinearProbe.insert table 7 "seven";
-  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
-  HashTableLinearProbe.insert table 9 "nine";
-  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
-  HashTableLinearProbe.insert table 10 "ten";
-  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
-  HashTableLinearProbe.insert table 11 "eleven";
-  Printf.printf "%s\n" (HashTableLinearProbe.inspect table); *)
-  (* for i = 1 to 11 do
-  match HashTableLinearProbe.find table i with
-  | None -> Printf.printf "nothing"
-  | Some value -> Printf.printf "%s\n" value
-  done;; *)
+  insert table 0 "zero";
+  insert table 1 "one";
+  insert table 2 "two";
+  insert table 3 "three";
+  insert table 11 "eleven";
+  insert table 4 "four";
+ 
+  (* inspect table;
+  inspect_array_bindings table print_key print_value; *)
+
+  insert table 5 "five";
+
+  inspect table;
+  inspect_array_bindings table print_key print_value;
+  find table 1 |> Option.get |> Printf.printf "value: %s\n";
+  find table 11 |> Option.get |> Printf.printf "value: %s\n";
+
+  remove table 5;
+  remove table 4;
+  remove table 3;
+  remove table 2;
+  remove table 0;
+
+  inspect table;
+  inspect_array_bindings table print_key print_value;
