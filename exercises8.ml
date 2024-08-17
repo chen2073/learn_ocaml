@@ -92,16 +92,18 @@ module BadHashTable = Hashtbl.Make(BadHashTableKey)
 
 let _ = 
   let ht1 = BadHashTable.create 10 in
-  BadHashTable.stats ht1;
+  (* BadHashTable.stats ht1 ;  *)
   BadHashTable.add ht1 1 "1";
-  BadHashTable.stats ht1;
+  (* BadHashTable.stats ht1; *)
   BadHashTable.add ht1 2 "2";
-  BadHashTable.stats ht1;
-  BadHashTable.add ht1 3 "3";;
+  (* BadHashTable.stats ht1; *)
+  BadHashTable.add ht1 3 "3" ;;
 
 
 module HashTableLinearProbe: (sig
   type ('k, 'v) t
+  val inspect: ('k, 'v) t -> unit
+  val inspect_array_bindings: ('k, 'v) t -> ('k -> int) -> ('v -> string)-> unit
   val create: ('k -> int) -> ('k, 'v) t
   val find: ('k, 'v) t -> 'k -> 'v option
   val insert: ('k, 'v) t -> 'k -> 'v -> unit
@@ -131,6 +133,19 @@ end) = struct
     buckets = 10;
     array_bindings = Array.make 10 None
   }
+
+  let inspect hashtable = Printf.printf
+    "stats: (bindings: %d, deleted: %d, buckets: %d)\n" hashtable.bindings hashtable.deleted hashtable.buckets 
+
+  let inspect_array_bindings hashtable print_key print_value = 
+    for i = 0 to Array.length hashtable.array_bindings - 1 do
+      Printf.printf "index: %d\nbinding: %s\n" i 
+      (match hashtable.array_bindings.(i) with
+      | None -> "None"
+      | Some binding -> Printf.sprintf "(key %d:, value: %s, isDeleted: %s)" (print_key binding.key) (print_value binding.value) (string_of_bool binding.isDeleted)
+      )
+    done;
+    Printf.printf "\n";;
 
   (* get_hash_index_fit: fit hashed index within bucket size*)
   let get_hash_index_fit (hashtable: ('k, 'v) t) (hash_index_raw: int): int = hash_index_raw mod hashtable.buckets
@@ -204,3 +219,37 @@ end) = struct
     else if (float_of_int hashtable.bindings -. float_of_int hashtable.deleted) /. float_of_int hashtable.buckets < 0.125
       then remap_array_bindings hashtable ResizeDown;;
 end
+
+let () = 
+  let print_key = (fun key -> key) in 
+  let hash_key = print_key in 
+  let print_value = (fun value -> value) in 
+  let table = HashTableLinearProbe.create hash_key in 
+  (* HashTableLinearProbe.inspect_array_bindings table print_key print_value; *)
+  
+  HashTableLinearProbe.insert table 1 "one";
+  HashTableLinearProbe.inspect table;
+  HashTableLinearProbe.inspect_array_bindings table print_key print_value;
+  (* HashTableLinearProbe.insert table 2 "two";
+  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
+  HashTableLinearProbe.insert table 3 "three";
+  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
+  HashTableLinearProbe.insert table 4 "four";
+  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
+  HashTableLinearProbe.insert table 5 "five";
+  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
+  HashTableLinearProbe.insert table 6 "six";
+  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
+  HashTableLinearProbe.insert table 7 "seven";
+  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
+  HashTableLinearProbe.insert table 9 "nine";
+  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
+  HashTableLinearProbe.insert table 10 "ten";
+  Printf.printf "%s\n" (HashTableLinearProbe.inspect table);
+  HashTableLinearProbe.insert table 11 "eleven";
+  Printf.printf "%s\n" (HashTableLinearProbe.inspect table); *)
+  (* for i = 1 to 11 do
+  match HashTableLinearProbe.find table i with
+  | None -> Printf.printf "nothing"
+  | Some value -> Printf.printf "%s\n" value
+  done;; *)
