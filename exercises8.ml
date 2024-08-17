@@ -103,8 +103,7 @@ let _ =
 module HashTableLinearProbe: (sig
   type ('k, 'v) t
   val inspect: ('k, 'v) t -> unit
-  val inspect_array_bindings: ('k, 'v) t -> ('k -> int) -> ('v -> string)-> unit
-  val create: ('k -> int) -> ('k, 'v) t
+  val create: ('k -> int) -> ('k -> int) -> ('v -> string) -> ('k, 'v) t
   val find: ('k, 'v) t -> 'k -> 'v option
   val insert: ('k, 'v) t -> 'k -> 'v -> unit
   val remove: ('k, 'v) t -> 'k -> unit
@@ -115,6 +114,8 @@ end) = struct
 
   type ('k, 'v) t = {
     hash_function: 'k -> int;
+    print_key: 'k -> int;
+    print_value: 'v -> string;
     (* bindings are active valid count of current bindings *)
     mutable bindings: int;
     (* deleted are count of virtually deleted bindings *)
@@ -126,8 +127,10 @@ end) = struct
 
   type resizeOption = ResizeUp | ResizeDown
 
-  let create hash_function = {
+  let create hash_function print_key print_value = {
     hash_function = hash_function;
+    print_key = print_key;
+    print_value = print_value;
     bindings = 0;
     deleted = 0;
     buckets = 10;
@@ -135,17 +138,15 @@ end) = struct
   }
 
   let inspect hashtable = Printf.printf
-    "stats: (bindings: %d, deleted: %d, buckets: %d)\n" hashtable.bindings hashtable.deleted hashtable.buckets 
-
-  let inspect_array_bindings hashtable print_key print_value = 
+    "stats: (bindings: %d, deleted: %d, buckets: %d)\n" hashtable.bindings hashtable.deleted hashtable.buckets;
     for i = 0 to Array.length hashtable.array_bindings - 1 do
       Printf.printf "index: %d; binding: %s\n" i 
       (match hashtable.array_bindings.(i) with
       | None -> "None"
-      | Some binding -> Printf.sprintf "(key %d:, value: %s, isDeleted: %s)" (print_key binding.key) (print_value binding.value) (string_of_bool binding.isDeleted)
+      | Some binding -> Printf.sprintf "(key %d:, value: %s, isDeleted: %s)" (hashtable.print_key binding.key) (hashtable.print_value binding.value) (string_of_bool binding.isDeleted)
       )
     done;;
-
+    
   (* get_hash_index_fit: fit hashed index within bucket size*)
   let get_hash_index_fit (hashtable: ('k, 'v) t) (hash_index_raw: int): int = hash_index_raw mod hashtable.buckets
   
@@ -226,7 +227,7 @@ let () =
   let print_key = (fun key -> key) in 
   let hash_key = print_key in 
   let print_value = (fun value -> value) in 
-  let table = create hash_key in 
+  let table = create hash_key print_key print_value in 
   Printf.printf "\n\n\n";
   
   insert table 0 "zero";
@@ -242,7 +243,6 @@ let () =
   insert table 5 "five";
 
   inspect table;
-  inspect_array_bindings table print_key print_value;
   find table 1 |> Option.get |> Printf.printf "value: %s\n";
   find table 11 |> Option.get |> Printf.printf "value: %s\n";
 
@@ -251,6 +251,4 @@ let () =
   remove table 3;
   remove table 2;
   remove table 0;
-
   inspect table;
-  inspect_array_bindings table print_key print_value;
