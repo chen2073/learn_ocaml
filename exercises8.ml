@@ -143,7 +143,11 @@ end) = struct
       Printf.printf "index: %d; binding: %s\n" i 
       (match hashtable.array_bindings.(i) with
       | None -> "None"
-      | Some binding -> Printf.sprintf "(key %d:, value: %s, isDeleted: %s)" (hashtable.print_key binding.key) (hashtable.print_value binding.value) (string_of_bool binding.isDeleted)
+      | Some binding -> 
+        Printf.sprintf "(key %d:, value: %s, isDeleted: %s)" 
+        (hashtable.print_key binding.key) 
+        (hashtable.print_value binding.value) 
+        (string_of_bool binding.isDeleted)
       )
     done;;
     
@@ -162,7 +166,10 @@ end) = struct
   (* remap: double or half array binding size and remap old array items to new array *)
   let remap_array_bindings (hashtable: ('k, 'v) t) (resize_option: resizeOption): unit = 
     let old_array_bindings = hashtable.array_bindings in
-    let new_array_bindings = Array.make (if resize_option = ResizeUp then hashtable.buckets * 2 else hashtable.buckets / 2) None in
+    let new_array_bindings = Array.make (match resize_option with 
+      | ResizeUp -> hashtable.buckets * 2 
+      | ResizeDown -> hashtable.buckets / 2) 
+      None in
     (* assign double sized array to hashtable and reset binding and deleted count to 0 *)
     hashtable.array_bindings <- new_array_bindings;
     hashtable.buckets <- Array.length new_array_bindings;
