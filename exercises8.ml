@@ -258,4 +258,38 @@ let () =
   remove table 3;
   remove table 2;
   remove table 0;
-  inspect table;
+  inspect table;;
+
+module type Comparable = sig
+  type t
+  val compare: t -> t -> int
+  (* 0 -> equal, 1 -> t1 > t2, -1 -> t1 < t2 *)
+end
+
+module BstSet (ComparableVal: Comparable) = struct
+  type 'a tree = None | Node of 'a * 'a tree * 'a tree 
+
+  let rec mem x = function
+    | None -> false
+    | Node (value, left, right) ->
+      if compare x value < 0 then mem x left
+      else if compare x value > 0 then mem x right
+      else true
+
+  let rec insert x = function
+    | None -> Node (x, None, None)
+    | Node (value, left, right) as node ->
+      if compare x value < 0 then Node (value, insert x left, right)
+      else if compare x value > 0 then Node (value, left, insert x right)
+      else node
+end
+
+module MyInt: Comparable = struct
+  type t = int
+  let compare int1 int2 = 
+    if int1 > int2 then 1
+    else if int1 < int2 then -1
+    else 0
+end
+
+module IntSet = BstSet (MyInt)
