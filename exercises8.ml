@@ -260,6 +260,9 @@ let () =
   remove table 0;
   inspect table;;
 
+
+(* Exercise: functorized BST *)
+
 module type Comparable = sig
   type t
   val compare: t -> t -> int
@@ -293,3 +296,54 @@ module MyInt: Comparable = struct
 end
 
 module IntSet = BstSet (MyInt)
+
+(* Exercise: efficient traversal *)
+type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree
+
+let rec preorder = function
+  | Leaf -> []
+  | Node (l,v,r) -> [v] @ preorder l @ preorder r
+
+let rec inorder = function
+  | Leaf -> []
+  | Node (l,v,r) ->  inorder l @ [v] @ inorder r
+
+let rec postorder = function
+  | Leaf -> []
+  | Node (l,v,r) ->  postorder l @ postorder r @ [v]
+
+let t =
+  Node(Node(Node(Leaf, 1, Leaf), 2, Node(Leaf, 3, Leaf)),
+       4,
+       Node(Node(Leaf, 5, Leaf), 6, Node(Leaf, 7, Leaf)))
+
+(*
+  t is
+        4
+      /   \
+     2     6
+    / \   / \
+   1   3 5   7
+*)
+
+let () = assert (preorder t  = [4;2;1;3;6;5;7])
+let () = assert (inorder t   = [1;2;3;4;5;6;7])
+let () = assert (postorder t = [1;3;2;5;7;6;4])
+
+let preorder_eff tree_node =
+  let rec preorder_eff' stack result = 
+    match stack with 
+    | [] -> List.rev result
+    | head :: stack' -> 
+      match head with 
+      | Leaf -> preorder_eff' stack' result
+      | Node (left, value, right) -> 
+        let result' = value :: result in 
+        match left, right with
+        | Leaf, Leaf -> preorder_eff' stack' result'
+        | left, Leaf -> preorder_eff' (left :: stack') result'
+        | Leaf, right -> preorder_eff' (right :: stack') result'
+        | left, right -> preorder_eff' (left :: right :: stack') result' in 
+  preorder_eff' (tree_node :: []) []
+
+  let () = assert (preorder_eff t  = [4;2;1;3;6;5;7])
