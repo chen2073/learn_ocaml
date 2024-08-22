@@ -346,4 +346,23 @@ let preorder_eff tree_node =
         | left, right -> preorder_eff' (left :: right :: stack') result' in 
   preorder_eff' (tree_node :: []) []
 
-  let () = assert (preorder_eff t  = [4;2;1;3;6;5;7])
+let () = assert (preorder_eff t = [4;2;1;3;6;5;7])
+
+let inorder_eff tree_node = 
+  let rec inorder_eff' cur_node stack result = 
+    match cur_node with
+    | Node (left, value, right) -> inorder_eff' left (cur_node :: stack) result
+    | Leaf -> 
+      match stack with 
+      | [] -> List.rev result
+      | Node (left, value, right) :: stack -> inorder_eff' right stack (value :: result)
+      | _ -> failwith "impossible" in 
+  inorder_eff' tree_node [] []
+
+let () = assert (inorder_eff t = [1;2;3;4;5;6;7])
+
+(* let postorder_eff tree_node = 
+  let rec postorder_eff' result cur_node = 
+    match cur_node with
+    | Leaf -> result
+    | Node (left, value, right) -> value::postorder_eff' *)
