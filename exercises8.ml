@@ -361,8 +361,38 @@ let inorder_eff tree_node =
 
 let () = assert (inorder_eff t = [1;2;3;4;5;6;7])
 
-(* let postorder_eff tree_node = 
-  let rec postorder_eff' result cur_node = 
-    match cur_node with
+let postorder_eff tree_node = 
+  let rec postorder_eff' node result = 
+    match node with 
     | Leaf -> result
-    | Node (left, value, right) -> value::postorder_eff' *)
+    | Node (left, value, right) -> value :: (postorder_eff' right (postorder_eff' left result)) in 
+  postorder_eff' tree_node [] |> List.rev
+
+let () = assert (postorder_eff t = [1;3;2;5;7;6;4])
+
+(* Exercise: RB draw complete *)
+
+(* Exercise: RB draw insert *)
+
+(* Exercise: pow2 *)
+type 'a sequence = Cons of 'a * (unit -> 'a sequence)
+let rec pow2 n = Cons (n, fun () -> pow2 (n * 2))
+
+let rec even n = Cons (n, fun () -> even (n + 2))
+
+let rec alphabet letter = Cons (letter, fun () -> alphabet (
+  if Char.code letter > 96 && Char.code letter < 122 
+    then Char.code letter |> (+) 1 |> Char.chr
+  else 'a'
+))
+
+type coinSide = Head | Tail
+let rec head_or_tail side = Cons (side, fun () -> 
+  head_or_tail (if side = Head 
+    then Tail 
+  else Head 
+))
+
+let nth seq n = 
+  let rec nth' seq counter = 
+    if counter = n 
