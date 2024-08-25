@@ -393,6 +393,39 @@ let rec head_or_tail side = Cons (side, fun () ->
   else Head 
 ))
 
-let nth seq n = 
-  let rec nth' seq counter = 
-    if counter = n 
+(* Exercise: nth *)
+let rec nth seq n = 
+  let Cons (head, tail) = seq in
+  match n with 
+  | 0 -> head
+  | _ -> nth (tail ()) (n-1)
+
+(* Exercise: hd tl *)
+
+(* Exercise: filter *)
+let rec filter pred seq = 
+  let Cons (head, tail) = seq in 
+  if pred head 
+    then Cons (head, fun () -> filter pred (tail ()))
+  else
+    filter pred (tail ())
+
+(* Exercise: interleave *)
+let rec interleave seq1 seq2 = 
+  let Cons (head1, tail1) = seq1 in 
+  let Cons (head2, tail2) = seq2 in 
+  Cons (head1, fun () -> Cons (head2, fun () -> interleave (tail1 ()) (tail2 ()) ))
+
+(* Exercise: sift *)
+let rec sift n seq = filter (fun x -> x mod n <> 0) seq
+
+let rec nat n = Cons (n, fun () -> nat (n+1)) 
+
+let hd (Cons (h, _)) = h
+
+(* [tl s] is the tail of [s] *)
+let tl (Cons (_, tf)) = tf ()
+
+let rec take n s =
+  if n=0 then []
+  else hd s :: take (n-1) (tl s)
