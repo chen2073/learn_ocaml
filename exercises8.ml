@@ -429,3 +429,65 @@ let tl (Cons (_, tf)) = tf ()
 let rec take n s =
   if n=0 then []
   else hd s :: take (n-1) (tl s)
+
+(* Exercise: primes *) 
+
+let prime =
+  let rec is_prime n i = 
+    if n < 2 
+      then false
+    else if n = i 
+      then true
+    else if n mod i = 0
+      then false
+    else 
+      is_prime n (i+1) in
+  let rec prime' n = 
+  match is_prime n 2 with
+  | true -> Cons (n, fun () -> prime' (n+1))
+  | false -> prime' (n+1) in 
+  prime' 2
+
+let pow x k = 
+  let rec pow' x' k' acc = 
+    if k' == 0 
+      then acc
+    else
+      pow' x' (k'-1) (x' *. acc) in
+  pow' x k 1.0
+
+let rec factorial n = 
+  if n <= 1
+    then 1
+  else if n = 2
+    then 2
+  else
+    n * factorial (n-1)
+
+(* Exercise: approximately e *)
+let e_terms x =
+  let k_th_term x' k' = (pow x' k') /. float_of_int (factorial k') in
+  let rec e_terms' x'' nth = Cons (k_th_term x'' nth, fun () -> e_terms' x'' (nth+1)) in 
+  e_terms' x 0
+
+let total seq = 
+  let rec total' acc seq' = 
+    let Cons (hd, tl) = seq' in
+    Cons (hd+.acc, fun () -> total' (hd+.acc) (tl ())) in
+  total' 0.0 seq
+
+let abs_diff float1 float2 = 
+  if (float1 -. float2) < 0.0
+    then float2 -. float1
+  else
+    float1 -. float2
+
+let within (eps: float) (Cons (hd, tl): float sequence): float = 
+  let rec within' prev_elem (Cons (cur_elem, next_elem)) = 
+    if (abs_diff prev_elem cur_elem) < eps
+      then cur_elem
+    else
+      within' cur_elem (next_elem ()) in
+  within' hd (tl ())
+
+let e x eps = e_terms x |> total |> within eps
