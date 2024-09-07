@@ -526,20 +526,35 @@ let within_rel_dis = within_generic relative_distance
 
 let e_eff x eps = epsilon_float |> within_rel_dis
 
+
 (* Exercise: different sequence rep *)
-type 'a sequence = Cons of (unit -> 'a * 'a sequence)
-let hd (seq: 'a sequence): 'a = 
-  let Cons (seq_func) = seq in
-  let head, _ = seq_func () in
-  head
+module MySequence = struct
 
-let tl (seq: 'a sequence): 'a sequence = 
-  let Cons(seq_func) = seq in 
-  let _, tail = seq_func () in 
-  tail
+  type 'a sequence = Cons of (unit -> 'a * 'a sequence)
 
-let nat = 
-  let rec nat' a = Cons (fun () -> (a, nat' (a+1))) in 
-  nat' 0
+  let hd (seq: 'a sequence): 'a = 
+    let Cons (seq_func) = seq in
+    let head, _ = seq_func () in
+    head
 
-let map (f: 'a -> 'b) (seq: 'a sequence): 'b sequence = 
+  let tl (seq: 'a sequence): 'a sequence = 
+    let Cons(seq_func) = seq in 
+    let _, tail = seq_func () in 
+    tail
+
+  let nat = 
+    let rec nat' a = Cons (fun () -> (a, nat' (a+1))) in 
+    nat' 0
+
+  let rec map (f: 'a -> 'b) (seq: 'a sequence): 'b sequence = 
+    let Cons (seq_func) = seq in 
+    let head, tail = seq_func () in 
+    Cons (fun () -> (f head, map f tail))
+
+end
+
+(* this sequence is lazier because it doesn't even evaluate head and tail when calling next from sequence until you evaluate it *)
+
+(* Exercise: lazy hello *)
+let hello =
+  lazy (print_endline "Hello lazy world")
