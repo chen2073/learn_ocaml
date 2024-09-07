@@ -482,12 +482,64 @@ let abs_diff float1 float2 =
   else
     float1 -. float2
 
-let within (eps: float) (Cons (hd, tl): float sequence): float = 
+let within_generic (differentiator: (float -> float -> float)) (eps: float) (Cons (hd, tl): float sequence): float = 
   let rec within' prev_elem (Cons (cur_elem, next_elem)) = 
-    if (abs_diff prev_elem cur_elem) < eps
+    if (differentiator prev_elem cur_elem) < eps
       then cur_elem
     else
       within' cur_elem (next_elem ()) in
   within' hd (tl ())
 
+let within = within_generic abs_diff
+
 let e x eps = e_terms x |> total |> within eps
+
+(* Exercise: better e *)
+
+(* 
+  x = 1
+  numerator power: 0, x ^ 0 -> 1, denominator: factorial 0 * 1-> 1, approximate: 1 
+  numerator power: 1, x -> x, denominator: factorial 1 * 1 -> 1, approximate: 1
+  numerator power: 2, x * x -> x^2, denominator: factorial 2 * 1 -> 2, approximate: 0.5
+  numerator power: 3, x * x * x -> x^3, denominator: factorial 3 * 2 -> 6, approximate: 1.66666
+  numerator power: 3, x * x * x * x-> x^4, denominator: factorial 4 * 6 -> 24, approximate: 0.041666
+  *)
+
+let e_terms_eff (x: float): float sequence = 
+  let rec e_terms_eff' nth numerator fact_n fact_prod approx = 
+    (* first term -> zero *)
+    if nth = 0
+      then Cons (1.0, fun () -> e_terms_eff' 1 x 1.0 1.0 0.0 )
+    (* 2nd term *)
+    else if nth = 1
+      then Cons (2.0, fun () -> e_terms_eff' 2 (x*.x) 2.0 1.0 2.0 )
+    (* 3rd and so forth *)
+    else
+      let cur_nth_approx = (numerator *. x) /. (fact_n *. fact_prod) in
+      let total_approx = approx +. cur_nth_approx in
+      Cons (total_approx, fun () -> e_terms_eff' (nth+1) (numerator *. x) (fact_n+.1.0) (fact_n *. fact_prod) total_approx ) in
+  e_terms_eff' 0 0.0 0.0 0.0 0.0
+
+let relative_distance a b = (a -. b) /. (Float.min_num a b) |> Float.abs
+
+let within_rel_dis = within_generic relative_distance
+
+let e_eff x eps = epsilon_float |> within_rel_dis
+
+(* Exercise: different sequence rep *)
+type 'a sequence = Cons of (unit -> 'a * 'a sequence)
+let hd (seq: 'a sequence): 'a = 
+  let Cons (seq_func) = seq in
+  let head, _ = seq_func () in
+  head
+
+let tl (seq: 'a sequence): 'a sequence = 
+  let Cons(seq_func) = seq in 
+  let _, tail = seq_func () in 
+  tail
+
+let nat = 
+  let rec nat' a = Cons (fun () -> (a, nat' (a+1))) in 
+  nat' 0
+
+let map (f: 'a -> 'b) (seq: 'a sequence): 'b sequence = 
