@@ -558,3 +558,28 @@ end
 (* Exercise: lazy hello *)
 let hello =
   lazy (print_endline "Hello lazy world")
+
+(* Exercise: lazy and *)
+let ( &&& ) (lb1: bool Lazy.t) (lb2: bool Lazy.t): bool =
+  if not (Lazy.force lb1)
+    then false
+  else
+    Lazy.force lb2
+
+(* Exercise: lazy sequence *)
+module LazySequence = struct
+  type 'a lazysequence = Cons of 'a * 'a lazysequence Lazy.t
+
+  let rec map (f: 'a -> 'b) (lazy_seq: 'a lazysequence): 'b lazysequence = 
+    let Cons (head, tail) = lazy_seq in
+    let force_tail = Lazy.force tail in
+    Cons (f head,  lazy (map f force_tail))
+
+  let rec filter (pred: 'a -> bool) (lazy_seq: 'a lazysequence): 'a lazysequence =
+    let Cons (head, tail) = lazy_seq in
+    let force_tail = Lazy.force tail in
+    if pred head
+      then Cons (head, lazy (filter pred force_tail))
+    else
+      filter pred force_tail
+end
