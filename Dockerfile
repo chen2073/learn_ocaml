@@ -2,7 +2,6 @@ FROM ubuntu:20.04 AS base
 
 FROM base AS builder
 
-
 # --disable-sandboxing is needed due to bwrap: No permissions to creating new namespace error
 RUN apt-get update && apt-get install -y opam \
     && opam init --bare -a -y --disable-sandboxing \
