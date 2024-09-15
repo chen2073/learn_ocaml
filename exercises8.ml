@@ -705,7 +705,3 @@ module Promise : PROMISE = struct
       enqueue (handler_of_callback callback output_resolver) input_promise;
       output_promise
 end
-
-let promise, resolver = Promise.make () in 
-let _ = Promise.return (fun a -> Printf.printf "%d\n" a; return ();) in 
-Promise.fulfill resolver 3
