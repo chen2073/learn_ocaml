@@ -1,3 +1,10 @@
 services:
-  hello:
-    build: .
+  hello-ubuntu:
+    build:
+      context: .
+      dockerfile: ubuntu.Dockerfile
+
+  hello-alpine:
+     build:
+      context: .
+      dockerfile: alpine.Dockerfile

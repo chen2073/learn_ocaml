@@ -1,10 +1,12 @@
-FROM ubuntu:20.04 AS base
+FROM alpine:3.20 AS base
 
 FROM base AS builder
 
-# --disable-sandboxing is needed due to bwrap: No permissions to creating new namespace error
-RUN apt-get update && apt-get install -y opam \
-    && opam init --bare -a -y --disable-sandboxing \
+RUN apk update && \
+    apk upgrade && \
+    apk add build-base opam
+
+RUN opam init --bare -a -y --disable-sandboxing \
     && opam update
 
 RUN opam switch create default ocaml-base-compiler.5.2.0
