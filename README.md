@@ -1,6 +1,6 @@
 # Learning OCaml
 
-## class
+## exercises
 https://cs3110.github.io/textbook/cover.html
 
 ## example docker set up
