@@ -123,10 +123,56 @@ let _ =
   let _ = Promise.(>>=) my_promise (fun n -> let _ = Printf.printf "%d\n" n in Promise.return ()) in
   Promise.fulfill my_resolver 10
 
+
 (* Exercise: promise and resolve lwt *)
 (* #require "lwt" "lwt.unix";; *)
-
 let _ = 
   let my_promise, my_resolver = Lwt.wait () in 
   let _ = Lwt.bind my_promise (fun n -> Lwt_io.printf "%d\n" n) in 
   Lwt.wakeup_later my_resolver 20
+
+(* Exercise: timing challenge 1 *)
+(** [delay s] is a promise that resolves after about [s] seconds. *)
+let delay (sec : float) : unit Lwt.t =
+  Lwt_unix.sleep sec
+
+let delay_then_print () = Lwt.bind (delay 3.0) (fun () -> Lwt_io.printf "done\n")
+
+(* Exercise: timing challenge 2 *)
+(* 1 + 10 + 20 sec to run, seq operations *)
+let timing2 () =
+  let open Lwt.Infix in
+  let _t1 = delay 1. >>= fun () -> Lwt_io.printl "1" in
+  let _t2 = delay 10. >>= fun () -> Lwt_io.printl "2" in
+  let _t3 = delay 20. >>= fun () -> Lwt_io.printl "3" in
+  Lwt_io.printl "all done"
+
+(* Exercise: timing challenge 3 *)
+let timing3 () =
+  let open Lwt.Infix in
+  delay 1. >>= fun () ->
+  Lwt_io.printl "1" >>= fun () ->
+  delay 10. >>= fun () ->
+  Lwt_io.printl "2" >>= fun () ->
+  delay 20. >>= fun () ->
+  Lwt_io.printl "3" >>= fun () ->
+  Lwt_io.printl "all done"
+
+  open Lwt.Infix
+
+(* Exercise: timing challenge 4 *)
+let timing4 () =
+  let open Lwt.Infix in
+  let t1 = delay 1. >>= fun () -> Lwt_io.printl "1" in
+  let t2 = delay 10. >>= fun () -> Lwt_io.printl "2" in
+  let t3 = delay 20. >>= fun () -> Lwt_io.printl "3" in
+  Lwt.join [t1; t2; t3] >>= fun () ->
+  Lwt_io.printl "all done"
+
+let timing5 () =
+  let open Lwt.Infix in
+  let t1 = delay 1. >>= fun () -> Lwt_io.printl "1" in
+  let t2 = delay 10. >>= fun () -> Lwt_io.printl "2" in
+  let t3 = delay 20. >>= fun () -> Lwt_io.printl "3" in
+  Lwt.pick [t1; t2; t3] >>= fun () ->
+  Lwt_io.printl "all done"

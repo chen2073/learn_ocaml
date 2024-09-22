@@ -4,3 +4,7 @@
 
 (executable
  (name hello))
+
+(executable
+ (name monitor)
+ (libraries lwt.unix))
