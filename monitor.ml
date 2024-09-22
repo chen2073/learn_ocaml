@@ -12,8 +12,12 @@ let log () : input_channel Lwt.t =
 (** [loop ic] reads one line from [ic], prints it to stdout,
     then calls itself recursively. It is an infinite loop. *)
 let rec loop (ic : input_channel) =
-  failwith "TODO"
   (* hint: use [Lwt_io.read_line] and [Lwt_io.printlf] *)
+  Lwt_io.read_line ic >>= fun line -> 
+    match line with
+    | "exit" -> Lwt.fail End_of_file
+    | _ -> Lwt_io.printlf "%s" line >>= fun () ->
+  loop ic
 
 (** [monitor ()] monitors the file named "log". *)
 let monitor () : unit Lwt.t =
@@ -23,8 +27,9 @@ let monitor () : unit Lwt.t =
     [End_of_file], it handles cleanly exiting the program by
     returning the unit promise. Any other input is re-raised
     with [Lwt.fail]. *)
-let handler : exn -> unit Lwt.t =
-  failwith "TODO"
+let handler : exn -> unit Lwt.t = function
+  | End_of_file -> Lwt.return ()
+  | exp -> Lwt.fail exp
 
 let main () : unit Lwt.t =
   Lwt.catch monitor handler
