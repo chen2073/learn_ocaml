@@ -156,6 +156,6 @@ let sub a = Trivial.return (a - 1)
 let sub2 a = Trivial.return (a - 2)
 let law3 = 
   let open Trivial in 
-  let a = return 5 >>= sub >>= sub2 in
-  let b = return 5 >>= fun x -> sub x >>= sub2 in
+  let a = (return 5 >>= fun x -> sub x) >>= sub2 in
+  let b = return 5 >>= (fun x -> sub x >>= sub2) in
   a = b
