@@ -3,8 +3,10 @@ services:
     build:
       context: .
       dockerfile: ubuntu.Dockerfile
+      target: ubuntu-runner
 
   hello-alpine:
      build:
       context: .
       dockerfile: alpine.Dockerfile
+      target: alpine-runner

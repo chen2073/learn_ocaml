@@ -1,3 +1,4 @@
+# alpine base image
 FROM alpine:3.20 AS alpine-base
 
 FROM alpine-base AS alpine-builder
@@ -27,6 +28,7 @@ COPY --from=alpine-builder /app/_build/default/hello.exe /app
 
 CMD [ "/app/hello.exe" ]
 
+# ubuntu base image 
 FROM ubuntu:20.04 AS ubuntu-base
 
 FROM ubuntu-base AS ubuntu-builder
